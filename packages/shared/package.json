@@ -2,19 +2,19 @@
   "name": "@repo/shared",
   "version": "1.0.0",
   "private": true,
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
+  "type": "module",
+  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "default": "./dist/index.js"
     }
   },
   "scripts": {
-    "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
-    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
+    "dev": "tsup --watch",
+    "build": "tsup",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

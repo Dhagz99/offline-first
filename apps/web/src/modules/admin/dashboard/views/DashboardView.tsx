@@ -16,6 +16,7 @@ export default function DashboardView() {
 
     useEffect(() => {
         if (dashboardLoading) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setShowSkeleton(true);
             return;
         }

@@ -1,14 +1,14 @@
-import { CorsOptions } from "cors";
-import { env } from "./env";
+import type { CorsOptions } from "cors";
 
 const allowedOrigins = [
-    env.FRONTEND_URL,
-    env.FRONTEND_LAN_URL,
-].filter(Boolean);
+    process.env.FRONTEND_URL,
+    process.env.FRONTEND_LAN_URL,
+].filter((origin): origin is string => Boolean(origin));
 
 export const corsOptions: CorsOptions = {
     origin(origin, callback) {
-        // Allow requests from tools like Postman
+        // Allow requests without an Origin header,
+        // such as server-to-server requests.
         if (!origin) {
             return callback(null, true);
         }
@@ -17,8 +17,9 @@ export const corsOptions: CorsOptions = {
             return callback(null, true);
         }
 
+        console.warn("CORS rejected origin:", origin);
+
         return callback(new Error("Not allowed by CORS"));
     },
-
     credentials: true,
 };

@@ -1,5 +1,5 @@
 {
-  "name": "my-monorepo",
+  "name": "workspace",
   "private": true,
   "version": "1.0.0",
   "description": "",
@@ -9,7 +9,8 @@
     "dev:web": "pnpm --filter web dev",
     "dev:api": "pnpm --filter api dev",
     "build": "turbo run build",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck",
+    "start": "turbo run start"
   },
   "keywords": [],
   "author": "",

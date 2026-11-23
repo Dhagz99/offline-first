@@ -188,10 +188,10 @@ export async function updateRolePermissionsController(
 ) {
 
     try {
-        const result =
+      const result =
             await accessControlService.updateRolePermissions(
                 Number(req.params.roleId),
-                req.body.permissionIds
+                req.body
             );
 
         sendSuccess(res, result, {

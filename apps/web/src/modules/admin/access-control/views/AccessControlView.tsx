@@ -24,9 +24,9 @@ import {
 import { CreateRoleSchema, CreateUserSchema, Role, UpdateRoleSchema, UpdateUserSchema, User } from "@repo/shared";
 import { useDebounce } from "@/hooks/useDebounce";
 import { accessControlFixture } from "../fixtures/accessControlFixtures";
-import { Button } from "@/components/ui/Button";
 import { getApiErrorMessage } from "@/lib/api/get-api-error-message";
 import { useAccessControlSocket } from "../hooks/useAccessControlSocket";
+import { Button } from "@/components/ui/Button";
 
 export default function AccessControlView() {
     useAccessControlSocket()
@@ -295,7 +295,7 @@ export default function AccessControlView() {
                         onCreateRole={() => { }}
                         onEditRole={() => { }}
 
-                        onPermissionChange={() => { }}
+                        onPermissionChange={async () => {}}
                     />
                 }
                 transition

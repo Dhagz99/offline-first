@@ -7,4 +7,8 @@ export const ROUTES = {
         DASHBOARD: "/admin/dashboard",
         ACCESS_CONTROL: "/admin/access-control",
     },
+
+    USER:{
+        DASHBOARD: "/user/dashboard",
+    }
 } as const;

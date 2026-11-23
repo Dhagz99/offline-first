@@ -37,8 +37,8 @@ export type AccessControlContentProps = {
         roleId: number,
         permissionId: number,
         checked: boolean
-    ) => void;
-};
+        ) => Promise<void>;
+    };
 
 export type UserTableProps = {
     users: User[];

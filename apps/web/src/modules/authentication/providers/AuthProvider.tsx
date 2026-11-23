@@ -64,6 +64,10 @@ export function AuthProvider({
                 router.replace("/branch/dashboard");
                 return;
             }
+             if (roles.includes("USER")) {
+                router.replace("/user/dashboard");
+                return;
+            }
 
             router.replace("/");
         },

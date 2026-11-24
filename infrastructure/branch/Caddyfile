@@ -1,0 +1,20 @@
+
+{$BRANCH_HOST} {
+    tls internal
+
+    encode zstd gzip
+
+    @api path /api /api/*
+    handle @api {
+        reverse_proxy api:5000
+    }
+
+    @socket path /socket.io /socket.io/*
+    handle @socket {
+        reverse_proxy api:5000
+    }
+
+    handle {
+        reverse_proxy web:3300
+    }
+}

@@ -81,3 +81,48 @@ model RolePermission {
   @@id([roleId, permissionId])
   @@map("role_permissions")
 }
+
+
+enum SyncStatus {
+  PENDING
+  PROCESSING
+  SYNCED
+  FAILED
+  CONFLICT
+}
+
+model SyncOutbox {
+  id          String     @id @default(uuid())
+  branchId    String
+  entityType  String
+  entityId    String
+  operation   String
+
+  payload     Json
+
+  status      SyncStatus @default(PENDING)
+  attempts    Int        @default(0)
+  lastError   String?
+
+  createdAt   DateTime   @default(now())
+  syncedAt    DateTime?
+
+  @@index([branchId, status, createdAt])
+}
+
+model SyncInbox {
+  id          String   @id
+  branchId    String
+  receivedAt  DateTime @default(now())
+
+  @@index([branchId])
+}
+
+model SyncCursor {
+  id          String   @id @default(uuid())
+  branchId    String   @unique
+  lastVersion BigInt   @default(0)
+  updatedAt   DateTime @updatedAt
+}
+
+

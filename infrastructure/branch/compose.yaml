@@ -1,0 +1,116 @@
+
+name: branch-system
+
+services:
+  postgres:
+    image: postgres:17.2
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: branch_app
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD required}
+      POSTGRES_DB: branch_db
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U branch_app -d branch_db
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+    networks:
+      - backend
+
+  api:
+    build:
+      context: ../..
+      dockerfile: infrastructure/branch/Dockerfile
+      target: api
+
+    image: branch-api:local
+    restart: unless-stopped
+
+    environment:
+      NODE_ENV: production
+      PORT: "5000"
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL required}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET required}
+      JWT_EXPIRES_IN: "1d"
+      FRONTEND_URL: ${BRANCH_ORIGIN:?BRANCH_ORIGIN required}
+      FRONTEND_LAN_URL: ${BRANCH_ORIGIN}
+      APP_MODE: BRANCH
+      BRANCH_CODE: ${BRANCH_CODE:?BRANCH_CODE required}
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    expose:
+      - "5000"
+
+    networks:
+      - backend
+      - frontend
+
+  web:
+    build:
+      context: ../..
+      dockerfile: infrastructure/branch/Dockerfile
+      target: web
+
+    image: branch-web:local
+    restart: unless-stopped
+
+    environment:
+      NODE_ENV: production
+      PORT: "3300"
+      HOSTNAME: "0.0.0.0"
+
+    expose:
+      - "3300"
+
+    depends_on:
+      - api
+
+    networks:
+      - frontend
+
+  proxy:
+    image: caddy:2
+    restart: unless-stopped
+
+    ports:
+      - "80:80"
+      - "443:443"
+
+    environment:
+      BRANCH_HOST: ${BRANCH_HOST:?BRANCH_HOST required}
+
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+    depends_on:
+      - web
+      - api
+
+    networks:
+      - frontend
+
+networks:
+  backend:
+    driver: bridge
+    internal: true
+
+  frontend:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:

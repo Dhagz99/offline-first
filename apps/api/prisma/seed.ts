@@ -7,7 +7,6 @@ async function main() {
     // Seed required/default data
     await seedPermissions();
     await seedRoles();
-    await seedUsers();
 
     // Development/test data
     // await factoryUser();

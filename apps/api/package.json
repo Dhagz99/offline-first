@@ -8,6 +8,7 @@
     "typecheck": "tsc -p tsconfig.build.json",
     "start": "node dist/server.mjs",
     "create:user": "tsx prisma/factories/user.factory.ts",
+    "setup:admin": "tsx prisma/scripts/create-admin.ts",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",

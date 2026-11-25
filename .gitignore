@@ -93,3 +93,8 @@ Thumbs.db
 
 
 infrastructure/branch/.env
+infrastructure/development/.env
+
+apps/api/.env.central
+apps/api/.env.branch-a
+apps/api/.env.branch-b

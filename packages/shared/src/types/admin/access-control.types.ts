@@ -1,14 +1,14 @@
 import { QueryParams } from "../query.types";
 
 export type Permission = {
-    id: number;
+    id: string;
     code: string;
     name: string;
     description: string;
 };
 
 export type Role = {
-    id: number;
+    id: string;
     name: string;
     description?: string | null;
     permissions: Permission[];
@@ -48,5 +48,9 @@ export type UpdateRolePermissionsInput = {
 
 export interface UserQueryParams extends QueryParams {
     role?: string;
+    branchId?: string;
     status?: "all" | "active" | "inactive";
 }
+
+
+

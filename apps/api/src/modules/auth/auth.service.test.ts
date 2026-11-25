@@ -21,9 +21,21 @@ vi.mock("./auth.mapper", () => ({
     mapAuthenticatedUser: vi.fn(),
 }));
 
+// ============================================
+// MOCK UUIDs
+// ============================================
+
+const USER_ID = "550e8400-e29b-41d4-a716-446655440000";
+const ROLE_ID = "550e8400-e29b-41d4-a716-446655440001";
+const PERMISSION_ID = "550e8400-e29b-41d4-a716-446655440002";
+
+// ============================================
+// TESTS
+// ============================================
+
 describe("loginUser", () => {
     beforeEach(() => {
-        vi.clearAllMocks();
+        vi.resetAllMocks();
     });
 
     it("should throw INVALID_CREDENTIALS when user does not exist", async () => {
@@ -55,7 +67,7 @@ describe("loginUser", () => {
         vi.mocked(
             authRepository.findByUsernameWithRoles
         ).mockResolvedValue({
-            id: 1,
+            id: USER_ID,
             name: "John Doe",
             username: "john",
             password: "hashed-password",
@@ -81,7 +93,7 @@ describe("loginUser", () => {
 
     it("should throw INVALID_CREDENTIALS when password is invalid", async () => {
         const user = {
-            id: 1,
+            id: USER_ID,
             name: "John Doe",
             username: "john",
             password: "hashed-password",
@@ -117,23 +129,23 @@ describe("loginUser", () => {
 
     it("should return token and authenticated user when credentials are valid", async () => {
         const user = {
-            id: 1,
-            name: "System",
-            username: "Admin",
+            id: USER_ID,
+            name: "John Doe",
+            username: "john",
             password: "hashed-password",
             isActive: true,
             roles: [
                 {
                     role: {
-                        id: 1,
+                        id: ROLE_ID,
                         name: "ADMIN",
                         description: null,
                         permissions: [
                             {
                                 permission: {
-                                    id: 1,
-                                    code: "USER_MANAGE",
-                                    name: "Manage Users",
+                                    id: PERMISSION_ID,
+                                    code: "users.read",
+                                    name: "Read Users",
                                     description: null,
                                 },
                             },
@@ -144,7 +156,7 @@ describe("loginUser", () => {
         };
 
         const authenticatedUser = {
-            id: 1,
+            id: USER_ID,
             name: "John Doe",
             username: "john",
             roles: ["ADMIN"],
@@ -182,7 +194,7 @@ describe("loginUser", () => {
         expect(mapAuthenticatedUser).toHaveBeenCalledWith(user);
 
         expect(generateAccessToken).toHaveBeenCalledWith({
-            id: 1,
+            id: USER_ID,
             username: "john",
             roles: ["ADMIN"],
             permissions: ["users.read"],

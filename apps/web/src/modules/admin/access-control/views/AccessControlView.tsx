@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useDisclosure } from "@/hooks/useDisclosure";
 import { AccessControlContent } from "./AccessControlContent";
 import { Skeleton } from "boneyard-js/react";
@@ -23,7 +23,6 @@ import {
 } from "../hooks/useAccessControl";
 import { CreateRoleSchema, CreateUserSchema, Role, UpdateRoleSchema, UpdateUserSchema, User } from "@repo/shared";
 import { useDebounce } from "@/hooks/useDebounce";
-import { accessControlFixture } from "../fixtures/accessControlFixtures";
 import { getApiErrorMessage } from "@/lib/api/get-api-error-message";
 import { useAccessControlSocket } from "../hooks/useAccessControlSocket";
 import { Button } from "@/components/ui/Button";
@@ -36,12 +35,12 @@ export default function AccessControlView() {
 
     const { mutateAsync: createUser, isPending: pendingCreateUser } = useCreateUser();
     const { mutateAsync: updateUser, isPending: pendingUpdateUser } = useUpdateUser();
-    const { mutateAsync: deleteUser, isPending: pendingDeleteUser } = useDeleteUser();
+    const { mutateAsync: deleteUser, } = useDeleteUser();
 
     const { mutateAsync: createRole, isPending: pendingCreateRole } = useCreateRole();
     const { mutateAsync: updateRole, isPending: pendingUpdateRole } = useUpdateRole();
 
-    const { mutateAsync: updatePermissions, isPending: pendingUpdatePermission } = useUpdateRolePermissions();
+    const { mutateAsync: updatePermissions } = useUpdateRolePermissions();
 
     const rolesQuery = useRoles();
     const permissionsQuery = usePermissions();
@@ -54,8 +53,8 @@ export default function AccessControlView() {
 
 
     async function handlePermissionChange(
-        roleId: number,
-        permissionId: number,
+        roleId: string,
+        permissionId: string,
         checked: boolean
     ) {
         const role = roles.find(
@@ -277,9 +276,9 @@ export default function AccessControlView() {
                 loading={isInitialLoading}
                 fixture={
                     <AccessControlContent
-                        users={accessControlFixture.users}
-                        roles={accessControlFixture.roles}
-                        permissions={accessControlFixture.permissions}
+                        users={[]}
+                        roles={[]}
+                        permissions={[]}
                         userSearch=""
                         userLimit={10}
                         userPagination={undefined}
@@ -329,7 +328,7 @@ export default function AccessControlView() {
                 isOpen={userModal.isOpen}
                 onClose={handleCloseUserModal}
                 title={selectedUser ? "Edit User" : "Create User"}
-                size="md"
+                size="lg"
                 footer={
                     <>
                         <Button

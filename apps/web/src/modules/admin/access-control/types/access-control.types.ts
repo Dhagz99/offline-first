@@ -34,8 +34,8 @@ export type AccessControlContentProps = {
     onEditRole: (role: Role) => void;
 
     onPermissionChange: (
-        roleId: number,
-        permissionId: number,
+        roleId: string,
+        permissionId: string,
         checked: boolean
         ) => Promise<void>;
     };

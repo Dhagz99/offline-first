@@ -2,6 +2,40 @@ import "dotenv/config";
 import { z } from "zod";
 
 const envSchema = z.object({
+    APP_MODE: z.enum([
+    "CENTRAL",
+    "BRANCH",
+    ]).default("CENTRAL"),
+
+    BRANCH_ID: z.uuid().optional(),
+
+    BRANCH_CODE: z.string().min(1).optional(),
+
+    BRANCH_API_KEY: z
+        .string()
+        .regex(/^brk_[a-f0-9]{64}$/)
+        .optional(),
+    
+    CENTRAL_API_URL: z.url().optional(),
+
+    SYNC_ENABLED: z
+        .enum(["true", "false"])
+        .default("false")
+        .transform((value) => value === "true"),
+
+    SYNC_INTERVAL_MS: z.coerce
+        .number()
+        .int()
+        .min(1000)
+        .default(10000),
+
+    SYNC_BATCH_SIZE: z.coerce
+        .number()
+        .int()
+        .min(1)
+        .max(500)
+        .default(50),
+
     PORT: z.coerce.number().default(5000),
 
     DATABASE_URL: z.string(),
@@ -15,6 +49,8 @@ const envSchema = z.object({
     NODE_ENV: z
         .enum(["development", "test", "production"])
         .default("development"),
+
+ 
 });
 
 export const env = envSchema.parse(process.env);

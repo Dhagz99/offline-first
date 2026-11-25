@@ -33,7 +33,7 @@ const authUserSelect = {
     },
 } as const;
 
-export async function findByIdWithRoles(userId: number) {
+export async function findByIdWithRoles(userId: string) {
     return prisma.user.findUnique({
         where: {
             id: userId,
@@ -68,7 +68,7 @@ export async function findExistingUser({
     });
 }
 
-export async function findRolesByIds(roleIds: number[]) {
+export async function findRolesByIds(roleIds: string[]) {
     return prisma.role.findMany({
         where: {
             id: {
@@ -106,7 +106,7 @@ export async function createUserWithRoles(data: {
     });
 }
 
-export async function findById(userId: number) {
+export async function findById(userId: string) {
     return prisma.user.findUnique({
         where: {
             id: userId,
@@ -119,7 +119,7 @@ export async function findDuplicateUser({
     username,
     email,
 }: {
-    userId: number;
+    userId: string;
     username?: string;
     email?: string | null;
 }) {
@@ -141,14 +141,14 @@ export async function findDuplicateUser({
 }
 
 export async function updateUserWithRoles(
-    userId: number,
+    userId: string,
     data: {
         email?: string;
         name?: string;
         username?: string;
         password?: string;
         isActive?: Boolean;
-        roleIds?: number[];
+        roleIds?: string[];
     }
 ) {
     return prisma.$transaction(async (tx) => {
@@ -281,8 +281,8 @@ export async function findAllUsers() {
 }
 
 export async function updatePermissions(
-    roleId: number,
-    permissionIds: number[]
+    roleId: string,
+    permissionIds: string[]
 ) {
     return prisma.$transaction(async (tx) => {
         await tx.rolePermission.deleteMany({

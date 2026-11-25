@@ -8,6 +8,7 @@ import { createUserSchema, updateRolePermissionsSchema, updateUserSchema } from 
 
 import { AppError } from "@/errors/app-error";
 import { ErrorCodes } from "@/errors/error-codes";
+import z from "zod";
 
 export async function me(
   req: Request,
@@ -95,11 +96,12 @@ export async function createUserController(req: Request, res: Response, next: Ne
 }
 
 export async function updateUserController(req: Request, res: Response, next: NextFunction) {
-  const userId = Number(req.params.id)
 
   try {
 
-    const userId = Number(req.params.id);
+       const userId = z.uuid("Invalid role ID").parse(
+                req.params.id
+            );
 
     if (Number.isNaN(userId)) {
       throw new AppError(
@@ -182,7 +184,9 @@ export async function updateRolePermissionsController(
   next: NextFunction
 ) {
   try {
-    const roleId = Number(req.params.id);
+       const roleId = z.uuid("Invalid role ID").parse(
+               req.params.roleId
+           );
 
     if (Number.isNaN(roleId)) {
       throw new AppError(

@@ -1,35 +1,52 @@
-import { prisma } from "../../src/lib/database/prisma";
+import type { Prisma } from "../../generated/prisma/client";
 
-export async function seedRoles() {
+export async function seedRoles(
+    tx: Prisma.TransactionClient
+) {
     const roles = [
         {
             name: "ADMIN",
+            description: "Central system administrator",
             permissions: [
                 "USER_MANAGE",
                 "ADMIN_MANAGE",
+                "BRANCH_MANAGE",
+                "BRANCH_VIEW",
+                "SYNC_VIEW",
+                "SYNC_MANAGE",
             ],
         },
-         {
-            name: "USER",
+        {
+            name: "BRANCH_ADMIN",
+            description: "Local branch administrator",
             permissions: [
-                "USER_MANAGE",
+                "BRANCH_VIEW",
+                "SYNC_VIEW",
             ],
+        },
+        {
+            name: "USER",
+            description: "Regular system user",
+            permissions: [],
         },
     ];
 
     for (const role of roles) {
-        const createdRole = await prisma.role.upsert({
+        const createdRole = await tx.role.upsert({
             where: {
                 name: role.name,
             },
-            update: {},
+            update: {
+                description: role.description,
+            },
             create: {
                 name: role.name,
+                description: role.description,
             },
         });
 
         for (const permissionCode of role.permissions) {
-            const permission = await prisma.permission.findUnique({
+            const permission = await tx.permission.findUnique({
                 where: {
                     code: permissionCode,
                 },
@@ -41,7 +58,7 @@ export async function seedRoles() {
                 );
             }
 
-            await prisma.rolePermission.upsert({
+            await tx.rolePermission.upsert({
                 where: {
                     roleId_permissionId: {
                         roleId: createdRole.id,
@@ -55,7 +72,9 @@ export async function seedRoles() {
                 },
             });
         }
+
+        console.log(`Role seeded: ${role.name}`);
     }
 
-    console.log("✅ Roles seeded");
+    console.log("Roles seeded successfully");
 }

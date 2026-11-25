@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect } from "react";
@@ -28,6 +27,8 @@ import { Label } from "@/components/ui/Label";
 import { FieldError } from "@/components/ui/FieldError";
 import { Input } from "@/components/ui/input";
 
+import { UserBranchSelect } from "./UserBranchSelect";
+
 type FormValues = CreateUserSchema | UpdateUserSchema;
 
 export function UserForm({
@@ -40,25 +41,38 @@ export function UserForm({
 }: UserFormProps) {
   const isEdit = mode === "edit";
 
+  /* =====================
+     FORM INITIALIZATION
+  ===================== */
+
   const {
     register,
     handleSubmit,
     control,
     reset,
-    formState: { errors },
+    formState: {
+      errors,
+      dirtyFields,
+    },
   } = useForm<FormValues>({
     resolver: zodResolver(
       isEdit ? updateUserSchema : createUserSchema
     ),
+
     defaultValues: {
       name: "",
       username: "",
       email: "",
       password: "",
       roleIds: [],
+      branchIds: [],
       isActive: true,
     },
   });
+
+  /* =====================
+     RESET FORM
+  ===================== */
 
   useEffect(() => {
     if (isEdit && user) {
@@ -67,7 +81,16 @@ export function UserForm({
         username: user.username,
         email: user.email ?? "",
         password: "",
-        roleIds: user.roles.map((role) => role.id),
+
+        roleIds: user.roles.map(
+          (role) => role.id
+        ),
+
+        branchIds:
+          user.branches?.map(
+            (branch) => branch.id
+          ) ?? [],
+
         isActive: user.isActive,
       });
     } else {
@@ -77,19 +100,49 @@ export function UserForm({
         email: "",
         password: "",
         roleIds: [],
+        branchIds: [],
         isActive: true,
       });
     }
   }, [isEdit, user, reset]);
 
+  /* =====================
+     FORM SUBMISSION
+  ===================== */
+
   const submit = (data: FormValues) => {
     if (isEdit) {
-      onUpdate?.(data as UpdateUserSchema);
+      const {
+        branchIds,
+        password,
+        ...rest
+      } = data;
+
+      const payload: UpdateUserSchema = {
+        ...rest,
+
+        // Only update password when provided.
+        ...(password
+          ? { password }
+          : {}),
+
+        // Only update branch assignments when changed.
+        ...(dirtyFields.branchIds
+          ? { branchIds: branchIds ?? [] }
+          : {}),
+      };
+
+      onUpdate?.(payload);
+
       return;
     }
 
     onCreate?.(data as CreateUserSchema);
   };
+
+  /* =====================
+     INPUT STYLING
+  ===================== */
 
   const inputClassName = `
     h-11 w-full rounded-lg
@@ -111,7 +164,10 @@ export function UserForm({
       onSubmit={handleSubmit(submit)}
       className="space-y-6"
     >
-      {/* FORM INTRODUCTION */}
+      {/* =====================
+          FORM INTRODUCTION
+      ===================== */}
+
       <div className="flex items-center gap-3 rounded-xl border border-sky-100 bg-sky-50/70 p-4">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-sky-600">
           <UserRound size={20} />
@@ -119,29 +175,42 @@ export function UserForm({
 
         <div>
           <h3 className="text-sm font-semibold text-[#14243B]">
-            {isEdit ? "Update User Information" : "New User Account"}
+            {isEdit
+              ? "Update User Information"
+              : "New User Account"}
           </h3>
 
           <p className="mt-1 text-xs text-slate-500">
             {isEdit
-              ? "Update account details and assigned roles."
-              : "Enter the details to create a new system account."}
+              ? "Update account details, assigned roles, and branch access."
+              : "Configure a new system account, roles, and branch access."}
           </p>
         </div>
       </div>
 
-      {/* ACCOUNT DETAILS */}
+      {/* =====================
+          ACCOUNT INFORMATION
+      ===================== */}
+
       <div className="space-y-4">
         <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
-          <UserRound size={16} className="text-sky-600" />
+          <UserRound
+            size={16}
+            className="text-sky-600"
+          />
+
           <h4 className="text-sm font-semibold text-[#14243B]">
             Account Information
           </h4>
         </div>
 
-        {/* NAME */}
+        {/* FULL NAME */}
+
         <div className="space-y-1.5">
-          <Label htmlFor="name" className="text-sm font-medium text-slate-700">
+          <Label
+            htmlFor="name"
+            className="text-sm font-medium text-slate-700"
+          >
             Full Name
           </Label>
 
@@ -162,12 +231,18 @@ export function UserForm({
             />
           </div>
 
-          <FieldError message={errors.name?.message} />
+          <FieldError
+            message={errors.name?.message}
+          />
         </div>
 
         {/* USERNAME */}
+
         <div className="space-y-1.5">
-          <Label htmlFor="username" className="text-sm font-medium text-slate-700">
+          <Label
+            htmlFor="username"
+            className="text-sm font-medium text-slate-700"
+          >
             Username
           </Label>
 
@@ -188,12 +263,18 @@ export function UserForm({
             />
           </div>
 
-          <FieldError message={errors.username?.message} />
+          <FieldError
+            message={errors.username?.message}
+          />
         </div>
 
-        {/* EMAIL */}
+        {/* EMAIL ADDRESS */}
+
         <div className="space-y-1.5">
-          <Label htmlFor="email" className="text-sm font-medium text-slate-700">
+          <Label
+            htmlFor="email"
+            className="text-sm font-medium text-slate-700"
+          >
             Email Address
           </Label>
 
@@ -214,13 +295,20 @@ export function UserForm({
             />
           </div>
 
-          <FieldError message={errors.email?.message} />
+          <FieldError
+            message={errors.email?.message}
+          />
         </div>
 
         {/* PASSWORD */}
+
         <div className="space-y-1.5">
-          <Label htmlFor="password" className="text-sm font-medium text-slate-700">
+          <Label
+            htmlFor="password"
+            className="text-sm font-medium text-slate-700"
+          >
             Password
+
             {isEdit && (
               <span className="ml-2 text-xs font-normal text-slate-400">
                 (Optional)
@@ -249,28 +337,40 @@ export function UserForm({
             />
           </div>
 
-          <FieldError message={errors.password?.message} />
+          <FieldError
+            message={errors.password?.message}
+          />
 
           {isEdit && (
             <p className="flex items-center gap-1.5 text-xs text-slate-400">
               <Info size={13} />
-              Leave this field blank to retain the existing password.
+
+              Leave this field blank to retain the
+              existing password.
             </p>
           )}
         </div>
       </div>
 
-      {/* ROLE ASSIGNMENT */}
+      {/* =====================
+          ROLE ASSIGNMENT
+      ===================== */}
+
       <div className="space-y-3">
         <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
-          <ShieldCheck size={16} className="text-sky-600" />
+          <ShieldCheck
+            size={16}
+            className="text-sky-600"
+          />
+
           <h4 className="text-sm font-semibold text-[#14243B]">
             Role Assignment
           </h4>
         </div>
 
         <p className="text-xs text-slate-500">
-          Select the roles that determine this user's access permissions.
+          Select the roles that determine this
+          user&apos;s access permissions.
         </p>
 
         <Controller
@@ -280,7 +380,8 @@ export function UserForm({
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {roles.map((role) => {
                 const checked =
-                  field.value?.includes(role.id) ?? false;
+                  field.value?.includes(role.id) ??
+                  false;
 
                 return (
                   <label
@@ -306,12 +407,21 @@ export function UserForm({
                       checked={checked}
                       disabled={isSubmitting}
                       onChange={(event) => {
-                        const current = field.value ?? [];
+                        const current =
+                          field.value ?? [];
 
                         field.onChange(
                           event.target.checked
-                            ? [...new Set([...current, role.id])]
-                            : current.filter((id) => id !== role.id)
+                            ? [
+                                ...new Set([
+                                  ...current,
+                                  role.id,
+                                ]),
+                              ]
+                            : current.filter(
+                                (id) =>
+                                  id !== role.id
+                              )
                         );
                       }}
                       className="h-4 w-4 shrink-0 accent-sky-600"
@@ -321,7 +431,9 @@ export function UserForm({
                       <ShieldCheck
                         size={16}
                         className={
-                          checked ? "text-sky-600" : "text-slate-400"
+                          checked
+                            ? "text-sky-600"
+                            : "text-slate-400"
                         }
                       />
 
@@ -331,7 +443,10 @@ export function UserForm({
                     </div>
 
                     {checked && (
-                      <Check size={16} className="shrink-0 text-sky-600" />
+                      <Check
+                        size={16}
+                        className="shrink-0 text-sky-600"
+                      />
                     )}
                   </label>
                 );
@@ -346,10 +461,34 @@ export function UserForm({
           )}
         />
 
-        <FieldError message={errors.roleIds?.message} />
+        <FieldError
+          message={errors.roleIds?.message}
+        />
       </div>
 
-      {/* ACCOUNT STATUS */}
+      {/* =====================
+          BRANCH ASSIGNMENT
+      ===================== */}
+
+      <div className="space-y-3 border-t border-slate-100 pt-4">
+        <Controller
+          name="branchIds"
+          control={control}
+          render={({ field, fieldState }) => (
+            <UserBranchSelect
+              value={field.value ?? []}
+              onChange={field.onChange}
+              disabled={isSubmitting}
+              error={fieldState.error?.message}
+            />
+          )}
+        />
+      </div>
+
+      {/* =====================
+          ACCOUNT STATUS
+      ===================== */}
+
       {isEdit && (
         <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
           <Controller
@@ -361,8 +500,10 @@ export function UserForm({
                   <p className="text-sm font-semibold text-slate-800">
                     Account Status
                   </p>
+
                   <p className="mt-1 text-xs text-slate-500">
-                    Allow this user to access the system.
+                    Allow this user to access the
+                    system.
                   </p>
                 </div>
 
@@ -370,7 +511,9 @@ export function UserForm({
                   type="checkbox"
                   checked={field.value ?? false}
                   onChange={(event) =>
-                    field.onChange(event.target.checked)
+                    field.onChange(
+                      event.target.checked
+                    )
                   }
                   disabled={isSubmitting}
                   className="h-5 w-5 shrink-0 accent-sky-600"

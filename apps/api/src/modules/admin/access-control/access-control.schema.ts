@@ -5,8 +5,20 @@ import {
     updateUserSchema,
     updateRolePermissionsSchema,
     createRoleSchema,
-    updateRoleSchema
+    updateRoleSchema,
 } from "@repo/shared";
+
+/* =====================
+   REUSABLE PARAM SCHEMAS
+===================== */
+
+export const userIdParamsSchema = z.object({
+    userId: z.uuid("Invalid user ID"),
+});
+
+export const roleIdParamsSchema = z.object({
+    roleId: z.uuid("Invalid role ID"),
+});
 
 /* =====================
    USER REQUEST SCHEMAS
@@ -17,17 +29,13 @@ export const createUserRequestSchema = z.object({
 });
 
 export const updateUserRequestSchema = z.object({
-    params: z.object({
-        userId: z.coerce.number().int().positive(),
-    }),
+    params: userIdParamsSchema,
 
     body: updateUserSchema,
 });
 
 export const deleteUserRequestSchema = z.object({
-    params: z.object({
-        userId: z.coerce.number().int().positive(),
-    }),
+    params: userIdParamsSchema,
 });
 
 /* =====================
@@ -39,9 +47,7 @@ export const createRoleRequestSchema = z.object({
 });
 
 export const updateRoleRequestSchema = z.object({
-    params: z.object({
-        roleId: z.coerce.number().int().positive(),
-    }),
+    params: roleIdParamsSchema,
 
     body: updateRoleSchema,
 });
@@ -51,9 +57,7 @@ export const updateRoleRequestSchema = z.object({
 ===================== */
 
 export const updateRolePermissionsRequestSchema = z.object({
-    params: z.object({
-        roleId: z.coerce.number().int().positive(),
-    }),
+    params: roleIdParamsSchema,
 
     body: updateRolePermissionsSchema,
 });
@@ -67,6 +71,9 @@ export type CreateUserRequestSchema =
 
 export type UpdateUserRequestSchema =
     z.infer<typeof updateUserRequestSchema>;
+
+export type DeleteUserRequestSchema =
+    z.infer<typeof deleteUserRequestSchema>;
 
 export type CreateRoleRequestSchema =
     z.infer<typeof createRoleRequestSchema>;

@@ -55,7 +55,7 @@ export function useUpdateUser() {
 
     return useMutation({
         mutationFn: ({ userId, data }: {
-            userId: number;
+            userId: string;
             data: UpdateUserSchema;
         }) => updateUserService(userId, data),
 
@@ -71,7 +71,7 @@ export function useDeleteUser() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (userId: number) =>
+        mutationFn: (userId: string) =>
             deleteUserService(userId),
 
         onSuccess: () => {
@@ -104,7 +104,7 @@ export function useUpdateRole() {
 
     return useMutation({
         mutationFn: ({ roleId, data }: {
-            roleId: number;
+            roleId: string;
             data: UpdateUserSchema;
         }) => updateRoleService(roleId, data),
 
@@ -121,7 +121,7 @@ export function useUpdateRolePermissions() {
 
     return useMutation({
         mutationFn: ({ roleId, data }: {
-            roleId: number;
+            roleId: string;
             data: UpdateRolePermissionsSchema;
         }) => updateRolePermissionsService(roleId, data),
 

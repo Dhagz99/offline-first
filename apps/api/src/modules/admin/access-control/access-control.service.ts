@@ -31,6 +31,7 @@ export async function createUser(
         email,
         password,
         roleIds,
+        branchIds,
     } = params;
 
     const duplicate =
@@ -57,6 +58,7 @@ export async function createUser(
             email,
             password: hashedPassword,
             roleIds,
+            branchIds: branchIds ?? [],
         });
 
     return mapUser(user);
@@ -64,7 +66,7 @@ export async function createUser(
 
 
 export async function updateUser(
-    userId: number,
+    userId: string,
     params: UpdateUserSchema
 ) {
     const user =
@@ -80,17 +82,38 @@ export async function updateUser(
         );
     }
 
+    if (
+        params.username !== undefined ||
+        params.email !== undefined
+    ) {
+        const duplicate =
+            await accessControlRepository.findDuplicateUser(
+                params.username ?? user.username,
+
+                params.email !== undefined
+                    ? params.email
+                    : user.email,
+
+                userId
+            );
+
+        if (duplicate) {
+            throw new AppError(
+                "Username or email already exists",
+                409,
+                ErrorCodes.USER_ALREADY_EXISTS
+            );
+        }
+    }
+
     const {
         password,
         ...rest
     } = params;
 
-    let hashedPassword: string | undefined;
-
-    if (password) {
-        hashedPassword =
-            await hashPassword(password);
-    }
+    const hashedPassword = password
+        ? await hashPassword(password)
+        : undefined;
 
     const updatedUser =
         await accessControlRepository.updateUser(
@@ -104,10 +127,10 @@ export async function updateUser(
             }
         );
 
-    return updatedUser;
+    return mapUser(updatedUser);
 }
 
-export const deleteUserService = async (userId: number) => {
+export const deleteUserService = async (userId: string) => {
     const user = await accessControlRepository.findUserById(userId);
 
     if (!user) {
@@ -139,7 +162,7 @@ export async function createRole(
 
 
 export async function updateRole(
-    roleId: number,
+    roleId: string,
     params: UpdateRoleSchema
 ) {
     const role =
@@ -172,7 +195,7 @@ export async function getPermissions() {
 
 
 export async function updateRolePermissions(
-    roleId: number,
+    roleId: string,
     params: UpdateRolePermissionsSchema
 ) {
     const role =
@@ -188,9 +211,14 @@ export async function updateRolePermissions(
         );
     }
 
+    // Remove duplicate permission IDs.
+    const permissionIds = [
+        ...new Set(params.permissionIds),
+    ];
+
     await accessControlRepository.updateRolePermissions(
         roleId,
-        params.permissionIds
+        permissionIds
     );
 
     return {

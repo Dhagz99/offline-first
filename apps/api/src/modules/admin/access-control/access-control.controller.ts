@@ -3,6 +3,8 @@ import type { Request, Response, NextFunction } from "express";
 import { sendSuccess } from "@/lib/http/response";
 import * as accessControlService from "./access-control.service";
 import { emitUserCreated } from "@/socket/emitters/user.emitter";
+import z from "zod";
+import { updateRolePermissionsSchema } from "@repo/shared";
 
 export async function getUsersController(
     req: Request,
@@ -12,32 +14,56 @@ export async function getUsersController(
     try {
         const status =
             req.query.status === "all" ||
-                req.query.status === "active" ||
-                req.query.status === "inactive"
+            req.query.status === "active" ||
+            req.query.status === "inactive"
                 ? req.query.status
                 : undefined;
 
-        const result = await accessControlService.getUsers({
-            page: Number(req.query.page) || 1,
-            limit: Number(req.query.limit) || 10,
+        const branchId =
+            req.query.branchId &&
+            req.query.branchId !== "all"
+                ? z.uuid("Invalid branch ID").parse(
+                    req.query.branchId
+                )
+                : undefined;
 
-            search:
-                typeof req.query.search === "string"
-                    ? req.query.search.trim()
-                    : undefined,
+        const page = z.coerce.number()
+            .int()
+            .positive()
+            .default(1)
+            .parse(req.query.page);
 
-            role:
-                typeof req.query.role === "string"
-                    ? req.query.role
-                    : undefined,
+        const limit = z.coerce.number()
+            .int()
+            .min(1)
+            .max(100)
+            .default(10)
+            .parse(req.query.limit);
 
-            status,
+        const result =
+            await accessControlService.getUsers({
+                page,
+                limit,
 
-            sort:
-                typeof req.query.sort === "string"
-                    ? req.query.sort
-                    : undefined,
-        });
+                search:
+                    typeof req.query.search === "string"
+                        ? req.query.search.trim()
+                        : undefined,
+
+                role:
+                    typeof req.query.role === "string"
+                        ? req.query.role
+                        : undefined,
+
+                status,
+
+                sort:
+                    typeof req.query.sort === "string"
+                        ? req.query.sort
+                        : undefined,
+
+                branchId,
+            });
 
         sendSuccess(res, result.data, {
             pagination: result.pagination,
@@ -46,7 +72,6 @@ export async function getUsersController(
         next(error);
     }
 }
-
 export async function createUserController(
     req: Request,
     res: Response,
@@ -72,8 +97,12 @@ export async function updateUserController(
     next: NextFunction
 ) {
     try {
-        const result = await accessControlService.updateUser(
-            Number(req.params.userId),
+          const userId = z.uuid("Invalid user ID").parse(
+            req.params.userId
+        );
+
+       const result = await accessControlService.updateUser(
+            userId,
             req.body
         );
 
@@ -90,7 +119,9 @@ export const deleteUserController = async (
     req: Request,
     res: Response
 ) => {
-    const userId = Number(req.params.userId);
+     const userId = z.uuid("Invalid user ID").parse(
+            req.params.userId
+        );
 
     await accessControlService.deleteUserService(userId);
 
@@ -147,8 +178,11 @@ export async function updateRoleController(
     next: NextFunction
 ) {
     try {
+          const roleId = z.uuid("Invalid role ID").parse(
+            req.params.roleId
+        );
         const role = await accessControlService.updateRole(
-            Number(req.params.roleId),
+              roleId,
             req.body
         );
 
@@ -180,23 +214,29 @@ export async function getPermissionsController(
         next(error);
     }
 }
-
 export async function updateRolePermissionsController(
     req: Request,
     res: Response,
     next: NextFunction
 ) {
-
     try {
-      const result =
+        const roleId = z.uuid(
+            "Invalid role ID"
+        ).parse(req.params.roleId);
+
+        const body = updateRolePermissionsSchema.parse(
+            req.body
+        );
+
+        const result =
             await accessControlService.updateRolePermissions(
-                Number(req.params.roleId),
-                req.body
+                roleId,
+                body
             );
 
         sendSuccess(res, result, {
             statusCode: 200,
-            message: "Role updated successfully",
+            message: "Role permissions updated successfully",
         });
     } catch (error) {
         next(error);

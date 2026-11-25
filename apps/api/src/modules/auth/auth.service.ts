@@ -8,7 +8,7 @@ import { verifyPassword, } from "./internal/password.service";
 import { mapAuthenticatedUser } from "./auth.mapper";
 import { RegisterUserSchema, UpdateUserSchema } from "@repo/shared";
 
-export const getAuthenticatedUser = async (userId: number) => {
+export const getAuthenticatedUser = async (userId: string) => {
     const user = await authRepository.findByIdWithRoles(userId);
 
     if (!user) {
@@ -110,7 +110,7 @@ export async function createUserService(data: RegisterUserSchema) {
 }
 
 export async function updateUserService(
-    userId: number,
+    userId: string,
     data: UpdateUserSchema
 ) {
     // Check if user exists
@@ -163,7 +163,7 @@ export async function updateUserService(
     const user = await authRepository.updateUserWithRoles(
         userId,
         {
-            email: data.email,
+            email: data.email ?? "",
             name: data.name,
             username: data.username,
             password: hashedPassword,
@@ -209,8 +209,8 @@ export async function getUsersService() {
 }
 
 export async function updateRolePermissionsService(
-    roleId: number,
-    permissionIds: number[]
+    roleId: string,
+    permissionIds: string[]
 ) {
     // business rules here
 

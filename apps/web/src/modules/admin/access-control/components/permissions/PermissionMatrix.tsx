@@ -28,8 +28,8 @@ type PermissionMatrixProps = {
   permissions: Permission[];
 
   onChange: (
-    roleId: number,
-    permissionId: number,
+    roleId: string,
+    permissionId: string,
     checked: boolean
   ) => Promise<void>;
 };
@@ -40,16 +40,16 @@ export function PermissionMatrix({
   onChange,
 }: PermissionMatrixProps) {
   const [selectedRoleId, setSelectedRoleId] =
-    useState<number | null>(null);
+    useState<string | null>(null);
 
   const [search, setSearch] = useState("");
 
   const [updatingPermissionId, setUpdatingPermissionId] =
-    useState<number | null>(null);
+    useState<string | null>(null);
 
   const [pendingChange, setPendingChange] = useState<{
-    roleId: number;
-    permissionId: number;
+    roleId: string;
+    permissionId: string;
     checked: boolean;
   } | null>(null);
 
@@ -86,7 +86,7 @@ export function PermissionMatrix({
 
   const assignedCount = assignedPermissionIds.size;
 
-  const handleRoleSelect = (roleId: number) => {
+  const handleRoleSelect = (roleId: string) => {
     if (updatingPermissionId !== null) return;
 
     setSelectedRoleId(roleId);
@@ -94,7 +94,7 @@ export function PermissionMatrix({
   };
 
   const handlePermissionChange = async (
-    permissionId: number,
+    permissionId: string,
     checked: boolean
   ) => {
     if (!selectedRole) return;
@@ -122,7 +122,7 @@ export function PermissionMatrix({
     }
   };
 
-  const isPermissionChecked = (permissionId: number) => {
+  const isPermissionChecked = (permissionId: string) => {
     if (
       pendingChange?.roleId === activeRoleId &&
       pendingChange?.permissionId === permissionId

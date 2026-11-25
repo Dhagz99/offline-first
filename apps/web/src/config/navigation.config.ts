@@ -3,7 +3,8 @@ import {
     Users,
     Truck,
     ClipboardList,
-    Settings
+    Settings,
+    Building
 } from "lucide-react";
 
 import { NavigationItem } from "@/types/navigation.types";
@@ -20,6 +21,12 @@ export const navigation: NavigationItem[] = [
         title: "Dashboard",
         href: ROUTES.ADMIN.DASHBOARD,
         icon: ClipboardList,
+        roles: ["ADMIN"],
+    },
+     {
+        title: "Branch",
+        href: ROUTES.ADMIN.BRANCH,
+        icon: Building,
         roles: ["ADMIN"],
     },
     {

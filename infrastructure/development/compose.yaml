@@ -1,0 +1,92 @@
+name: multi-branch-dev
+
+services:
+  central-db:
+    image: postgres:17.2
+    container_name: central-db
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${CENTRAL_DB_PASSWORD:?Required}
+      POSTGRES_DB: central_db
+
+    ports:
+      - "127.0.0.1:15433:5432"
+
+    volumes:
+      - central_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d central_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+    networks:
+      - central_net
+
+  branch-a-db:
+    image: postgres:17.2
+    container_name: branch-a-db
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${BRANCH_A_DB_PASSWORD:?Required}
+      POSTGRES_DB: branch_a_db
+
+    ports:
+      - "127.0.0.1:15434:5432"
+
+    volumes:
+      - branch_a_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d branch_a_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+    networks:
+      - branch_a_net
+
+  branch-b-db:
+    image: postgres:17.2
+    container_name: branch-b-db
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${BRANCH_B_DB_PASSWORD:?Required}
+      POSTGRES_DB: branch_b_db
+
+    ports:
+      - "127.0.0.1:15435:5432"
+
+    volumes:
+      - branch_b_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d branch_b_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+    networks:
+      - branch_b_net
+
+networks:
+  central_net:
+    driver: bridge
+
+  branch_a_net:
+    driver: bridge
+
+  branch_b_net:
+    driver: bridge
+
+volumes:
+  central_data:
+  branch_a_data:
+  branch_b_data:

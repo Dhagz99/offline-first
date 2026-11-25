@@ -1,29 +1,32 @@
-import type {
-    Permission,
-    Role,
-    User,
-} from "@repo/shared";
 
-export function mapUser(user: any): User {
+import { User } from "@repo/shared";
+import { SelectedUser } from "./access-control.repository";
+import { Role } from "@repo/shared";
+import { Permission } from "@repo/shared";
+
+export function mapUser(user: SelectedUser): User {
     const roles: Role[] = user.roles.map(
-        (entry: any) => ({
-            id: entry.role.id,
-            name: entry.role.name,
-            description: entry.role.description,
+        ({ role }) => ({
+            id: role.id,
+            name: role.name,
+            description: role.description,
 
-            permissions:
-                entry.role.permissions?.map(
-                    (item: any): Permission => ({
-                        id: item.permission.id,
-                        code: item.permission.code,
-                        name: item.permission.name,
-                        description: item.permission.description,
-                    })
-                ) ?? [],
+            permissions: role.permissions.map(
+                ({ permission }): Permission => ({
+                    id: permission.id,
+                    code: permission.code,
+                    name: permission.name,
+                    description: permission.description ?? "",
+                })
+            ),
         })
     );
 
-    const permissionMap = new Map<number, Permission>();
+    /* =====================
+       COMBINE PERMISSIONS
+    ===================== */
+
+    const permissionMap = new Map<string, Permission>();
 
     for (const role of roles) {
         for (const permission of role.permissions ?? []) {
@@ -34,19 +37,40 @@ export function mapUser(user: any): User {
         }
     }
 
+    /* =====================
+       MAP BRANCHES
+    ===================== */
+
+    const branches = user.branches.map(
+        ({ branch }) => ({
+            id: branch.id,
+            branchCode: branch.branchCode,
+            branchName: branch.branchName,
+            isActive: branch.isActive,
+        })
+    );
+
+    /* =====================
+       RETURN USER
+    ===================== */
+
     return {
         id: user.id,
         name: user.name,
         username: user.username,
-        email: user.email,
+        email: user.email ?? "",
         isActive: user.isActive,
+        createdAt: user.createdAt.toISOString(),
+
         roles,
+
         permissions: Array.from(
             permissionMap.values()
         ),
+
+        branches,
     };
 }
-
 export function mapRole(role: any) {
     return {
         id: role.id,

@@ -41,7 +41,7 @@ export const createUserService = async (
 };
 
 export const updateUserService = async (
-    userId: number,
+    userId: string,
     params: UpdateUserSchema
 ): Promise<ApiResponse<User>> => {
     const res = await api.patch<ApiResponse<User>>(
@@ -53,7 +53,7 @@ export const updateUserService = async (
 };
 
 export const deleteUserService = async (
-    userId: number,
+    userId: string,
 ): Promise<ApiResponse<null>> => {
     const res = await api.delete<ApiResponse<null>>(
         `/admin/access-control/users/${userId}`
@@ -85,7 +85,7 @@ export const createRoleService = async (
 };
 
 export const updateRoleService = async (
-    roleId: number,
+    roleId: string,
     params: UpdateRoleSchema
 ): Promise<ApiResponse<Role>> => {
     const res = await api.patch<ApiResponse<Role>>(
@@ -108,7 +108,7 @@ export const getPermissionsService = async (): Promise<
 };
 
 export const updateRolePermissionsService = async (
-    roleId: number,
+    roleId: string,
     params: UpdateRolePermissionsSchema
 ): Promise<ApiResponse<Role>> => {
     const res = await api.put<ApiResponse<Role>>(

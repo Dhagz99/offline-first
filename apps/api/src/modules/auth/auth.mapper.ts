@@ -1,17 +1,17 @@
 type AuthUserWithRoles = {
-    id: number;
+    id: string;
     name: string;
     username: string;
 
     roles: Array<{
         role: {
-            id: number;
+            id: string;
             name: string;
             description: string | null;
 
             permissions: Array<{
                 permission: {
-                    id: number;
+                    id: string;
                     code: string;
                     name: string;
                     description: string | null;

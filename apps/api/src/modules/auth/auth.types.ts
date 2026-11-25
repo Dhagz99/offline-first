@@ -1,5 +1,5 @@
 export interface AuthUser {
-    id: number;
+    id: string;
     name: string;
     username: string;
     roles: string[];
@@ -8,7 +8,7 @@ export interface AuthUser {
 }
 
 export interface JwtPayload {
-    id: number;
+    id: string;
     username: string;
     roles: string[];
     permissions: string[];

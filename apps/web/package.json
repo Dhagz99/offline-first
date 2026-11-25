@@ -4,6 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack -H 0.0.0.0 -p 3300",
+    "dev:central": "dotenv -e .env.central -o -- next dev --webpack -H 0.0.0.0 -p 3300",
+    "dev:branch-a": "dotenv -e .env.branch-a -o -- next dev --webpack -H 0.0.0.0 -p 3301",
+    "dev:branch-b": "dotenv -e .env.branch-b -o -- next dev --webpack -H 0.0.0.0 -p 3302",
+    
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 3300",
     "lint": "eslint",
@@ -40,6 +44,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv-cli": "^11.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.5",
     "playwright": "^1.62.1",

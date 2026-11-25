@@ -1,221 +1,160 @@
-import type { Request, Response, NextFunction } from "express";
+import type {
+    Request,
+    Response,
+    NextFunction,
+} from "express";
+
+import { z } from "zod";
 
 import { authConfig } from "@/config/auth.config";
 import { sendSuccess } from "@/lib/http/response";
-import * as service from "./auth.service";
-import type { LoginDTO } from "./auth.types";
-import { createUserSchema, updateRolePermissionsSchema, updateUserSchema } from "@repo/shared";
 
 import { AppError } from "@/errors/app-error";
 import { ErrorCodes } from "@/errors/error-codes";
-import z from "zod";
 
-export async function me(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
-  try {
-    const user = await service.getAuthenticatedUser(req.user!.id);
+import * as service from "./auth.service";
 
-    return sendSuccess(res, user);
-  } catch (error) {
-    next(error);
-  }
-}
+/* =========================
+   LOGIN SCHEMA
+========================= */
+
+const loginSchema = z.object({
+    username: z.string()
+        .trim()
+        .min(1)
+        .max(100),
+
+    password: z.string()
+        .min(1)
+        .max(256),
+});
+
+/* =========================
+   LOGIN
+========================= */
 
 export async function loginController(
-  req: Request<{}, {}, LoginDTO>,
-  res: Response,
-  next: NextFunction
+    req: Request,
+    res: Response,
+    next: NextFunction
 ) {
-  try {
-    const { token, user } = await service.loginUser(req.body);
 
-    res.cookie(
-      authConfig.accessTokenCookie,
-      token,
-      {
-        ...authConfig.cookieOptions,
-        maxAge: authConfig.accessTokenCookieMaxAge,
-      }
-    );
+    try {
 
-    return sendSuccess(res, user, {
-      message: "Login successful",
-    });
-  } catch (error) {
-    next(error);
-  }
+        const parsed =
+            loginSchema.safeParse(req.body);
+
+        if (!parsed.success) {
+            throw new AppError(
+                "Validation failed",
+                400,
+                ErrorCodes.VALIDATION_ERROR
+            );
+        }
+
+        const { token, user } =
+            await service.loginUser(parsed.data);
+
+        res.setHeader(
+            "Cache-Control",
+            "no-store"
+        );
+
+        res.cookie(
+            authConfig.accessTokenCookie,
+
+            token,
+
+            {
+                ...authConfig.cookieOptions,
+
+                maxAge:
+                    authConfig.accessTokenCookieMaxAge,
+            }
+        );
+
+        return sendSuccess(
+            res,
+            user,
+            {
+                message: "Login successful",
+            }
+        );
+
+    } catch (error) {
+
+        return next(error);
+    }
 }
+
+/* =========================
+   CURRENT USER
+========================= */
+
+export async function me(
+    req: Request,
+    res: Response,
+    next: NextFunction
+) {
+
+    try {
+
+        if (!req.user) {
+            throw new AppError(
+                "Unauthorized",
+                401,
+                ErrorCodes.INVALID_CREDENTIALS
+            );
+        }
+
+        res.setHeader(
+            "Cache-Control",
+            "no-store"
+        );
+
+        return sendSuccess(
+            res,
+            req.user
+        );
+
+    } catch (error) {
+
+        return next(error);
+    }
+}
+
+/* =========================
+   LOGOUT
+========================= */
 
 export async function logout(
-  req: Request,
-  res: Response,
-  next: NextFunction
+    _req: Request,
+    res: Response,
+    next: NextFunction
 ) {
-  try {
-    res.clearCookie(
-      authConfig.accessTokenCookie,
-      authConfig.cookieOptions
-    );
 
-    return sendSuccess(res, null, {
-      message: "Logout successful",
-    });
-  } catch (error) {
-    next(error);
-  }
-}
+    try {
 
-export async function createUserController(req: Request, res: Response, next: NextFunction
-) {
-  try {
-    const parsed = createUserSchema.safeParse(req.body);
+        res.clearCookie(
+            authConfig.accessTokenCookie,
+            authConfig.cookieOptions
+        );
 
-    if (!parsed.success) {
-      throw new AppError(
-        "Validation failed",
-        400,
-        ErrorCodes.VALIDATION_ERROR,
-      );
+        res.clearCookie(
+            authConfig.refreshTokenCookie,
+            authConfig.cookieOptions
+        );
+
+        return sendSuccess(
+            res,
+            null,
+            {
+                message: "Logout successful",
+            }
+        );
+
+    } catch (error) {
+
+        return next(error);
     }
-
-    const user = await service.createUserService(parsed.data);
-
-    return sendSuccess(
-      res, user,
-      {
-        statusCode: 201,
-        message: "User created successfully",
-      }
-    );
-  } catch (error) {
-    next(error);
-  }
 }
-
-export async function updateUserController(req: Request, res: Response, next: NextFunction) {
-
-  try {
-
-       const userId = z.uuid("Invalid role ID").parse(
-                req.params.id
-            );
-
-    if (Number.isNaN(userId)) {
-      throw new AppError(
-        "Invalid user ID",
-        400,
-        ErrorCodes.VALIDATION_ERROR);
-    }
-
-    const parsed = updateUserSchema.safeParse(req.body)
-
-    if (!parsed.success) {
-      throw new AppError(
-        "Validation failed",
-        400,
-        ErrorCodes.VALIDATION_ERROR,
-      );
-    }
-
-    const user = await service.updateUserService(userId, parsed.data)
-
-    return sendSuccess(res, user, {
-      statusCode: 400,
-      message: "User succesfully updated",
-    })
-  } catch (error) {
-    next(error);
-  }
-}
-
-export async function getRoleController(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
-  try {
-    const roles = await service.getRoleService();
-
-    return sendSuccess(res, roles, {
-      message: "Roles fetched successfully",
-    });
-  } catch (error) {
-    next(error);
-  }
-}
-
-export async function getPermissionController(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
-  try {
-    const permission = await service.getPermissionService()
-
-    return sendSuccess(res, permission, {
-      message: "Permission fetched successfully",
-    });
-  } catch (error) {
-    next(error);
-  }
-}
-
-export async function getUsersController(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
-  try {
-    const users = await service.getUsersService()
-    return sendSuccess(res, users, {
-      message: "User fetched successfully",
-    });
-  } catch (error) {
-    next(error);
-  }
-}
-
-export async function updateRolePermissionsController(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
-  try {
-       const roleId = z.uuid("Invalid role ID").parse(
-               req.params.roleId
-           );
-
-    if (Number.isNaN(roleId)) {
-      throw new AppError(
-        "Invalid role ID",
-        400,
-        ErrorCodes.VALIDATION_ERROR
-      );
-    }
-
-    const parsed = updateRolePermissionsSchema.safeParse(req.body);
-
-    if (!parsed.success) {
-      throw new AppError(
-        "Validation failed",
-        400,
-        ErrorCodes.VALIDATION_ERROR
-      );
-    }
-
-    await service.updateRolePermissionsService(
-      roleId,
-      parsed.data.permissionIds
-    );
-
-    return sendSuccess(res, null, {
-      message: "Permissions updated successfully",
-    });
-  } catch (error) {
-    next(error);
-  }
-}
-

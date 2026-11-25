@@ -12,6 +12,7 @@ import {
     testConnectionController,
 } from "./sync.controller";
 import { getProvisioningSnapshotController } from "./provisioning/provisioning.controller";
+import { pullChangesController } from "./pull/pull.controller";
 
 const router = Router();
 
@@ -35,6 +36,16 @@ router.get(
 router.get(
     "/provision",
     getProvisioningSnapshotController
+);
+
+/* =========================
+   PULL SYNCHRONIZATION EVENTS
+========================= */
+
+router.get(
+    "/pull",
+
+    pullChangesController
 );
 
 export default router;

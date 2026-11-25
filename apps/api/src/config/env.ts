@@ -50,7 +50,19 @@ const envSchema = z.object({
         .enum(["development", "test", "production"])
         .default("development"),
 
- 
+    SYNC_REQUEST_TIMEOUT_MS: z.coerce
+        .number()
+        .int()
+        .min(1000)
+        .max(120000)
+        .default(15000),
+
+    SYNC_MAX_RESPONSE_BYTES: z.coerce
+        .number()
+        .int()
+        .min(1024)
+        .max(52428800)
+        .default(10485760),
 });
 
 export const env = envSchema.parse(process.env);

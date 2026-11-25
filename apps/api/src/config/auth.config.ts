@@ -1,20 +1,35 @@
+import { env } from "./env";
+import { appConfig } from "./app.config";
 
-const isProduction = process.env.NODE_ENV === "production";
+const isProduction =
+    env.NODE_ENV === "production";
+
+const cookieSuffix = appConfig.isCentral
+    ? "central"
+    : `branch_${appConfig.branch.id}`;
 
 export const authConfig = {
-    accessTokenCookie: "access_token",
-    refreshTokenCookie: "refresh_token",
+
+    accessTokenCookie:
+        `access_token_${cookieSuffix}`,
+
+    refreshTokenCookie:
+        `refresh_token_${cookieSuffix}`,
 
     accessTokenCookieMaxAge:
-        7 * 24 * 60 * 60 * 1000, // 7 days
+        24 * 60 * 60 * 1000,
 
     refreshTokenCookieMaxAge:
-        30 * 24 * 60 * 60 * 1000, // 30 days
+        7 * 24 * 60 * 60 * 1000,
 
     cookieOptions: {
         httpOnly: true,
+
         secure: isProduction,
+
         sameSite: "lax" as const,
+
         path: "/",
     },
+
 } as const;

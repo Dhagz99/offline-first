@@ -15,6 +15,7 @@ import {
 
 import { navigation } from "@/config/navigation.config";
 import { useAuth } from "@/modules/authentication/hooks/useAuth";
+import { InstallationIndicator } from "../shared/InstallationIndicator";
 
 const COLORS = {
   sidebar: "#14243B",
@@ -279,6 +280,8 @@ export default function Sidebar() {
         className="shrink-0 border-t p-3"
         style={{ borderColor: COLORS.border }}
       >
+        <InstallationIndicator />
+
         {!collapsed && (
           <div
             className="

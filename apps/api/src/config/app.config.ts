@@ -23,5 +23,9 @@ export const appConfig = {
         intervalMs: env.SYNC_INTERVAL_MS,
 
         batchSize: env.SYNC_BATCH_SIZE,
+
+        requestTimeoutMs: env.SYNC_REQUEST_TIMEOUT_MS,
+
+        maxResponseBytes:  env.SYNC_MAX_RESPONSE_BYTES,
     },
 };

@@ -26,6 +26,7 @@ import {
     updateUserRequestSchema,
     deleteUserRequestSchema,
 } from "./access-control.schema";
+import { centralOnly } from "@/middleware/central-only.middleware";
 
 const router = Router();
 
@@ -34,6 +35,12 @@ const router = Router();
 ===================== */
 
 router.use(authenticate);
+
+/* =====================
+   CENTRAL ONLY
+===================== */
+
+router.use(centralOnly);
 
 /* =====================
    USERS

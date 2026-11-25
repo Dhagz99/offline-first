@@ -4,6 +4,8 @@ import type {
     NextFunction,
 } from "express";
 
+import { appConfig } from "@/config/app.config";
+
 import { AppError } from "@/errors/app-error";
 import { ErrorCodes } from "@/errors/error-codes";
 
@@ -12,7 +14,9 @@ export function centralOnly(
     _res: Response,
     next: NextFunction
 ): void {
-    if (process.env.APP_MODE !== "CENTRAL") {
+
+    if (!appConfig.isCentral) {
+
         return next(
             new AppError(
                 "This operation is only available on the central server",

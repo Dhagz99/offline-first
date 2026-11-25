@@ -1,25 +1,26 @@
-import { io, type Socket } from "socket.io-client";
+import { io } from "socket.io-client";
 
-import type {
-    ClientToServerEvents,
-    ServerToClientEvents,
-} from "@repo/shared";
+import { appConfig } from "@/config/app.config";
 
-const SOCKET_URL =
-    process.env.NEXT_PUBLIC_BACKEND_LAN_URL;
+export function createSocket() {
+    return io(
+        appConfig.backendUrl || undefined,
+        {
+            path: "/socket.io",
 
-let socket: Socket<
-    ServerToClientEvents,
-    ClientToServerEvents
-> | null = null;
-
-export const createSocket = () => {
-    if (!socket) {
-        socket = io(SOCKET_URL!, {
-            autoConnect: true,
             withCredentials: true,
-        });
-    }
 
-    return socket;
-};
+            autoConnect: false,
+
+            reconnection: true,
+
+            reconnectionAttempts: Infinity,
+
+            reconnectionDelay: 1000,
+
+            reconnectionDelayMax: 10000,
+
+            timeout: 10000,
+        }
+    );
+}

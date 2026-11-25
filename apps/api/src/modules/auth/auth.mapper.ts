@@ -1,33 +1,31 @@
-type AuthUserWithRoles = {
-    id: string;
-    name: string;
-    username: string;
+import type {
+    AuthUserRecord,
+} from "./auth.repository";
 
-    roles: Array<{
-        role: {
-            id: string;
-            name: string;
-            description: string | null;
+import type {
+    AuthUser,
+} from "./auth.types";
 
-            permissions: Array<{
-                permission: {
-                    id: string;
-                    code: string;
-                    name: string;
-                    description: string | null;
-                };
-            }>;
-        };
-    }>;
-};
+export function mapAuthenticatedUser(
+    user: AuthUserRecord
+): AuthUser {
 
-export function mapAuthenticatedUser(user: AuthUserWithRoles) {
+    const roles = [
+        ...new Set(
+            user.roles.map(
+                (userRole) => userRole.role.name
+            )
+        ),
+    ];
+
     const permissions = [
         ...new Set(
-            user.roles.flatMap((userRole) =>
-                userRole.role.permissions.map(
-                    (rolePermission) => rolePermission.permission.code
-                )
+            user.roles.flatMap(
+                (userRole) =>
+                    userRole.role.permissions.map(
+                        (rolePermission) =>
+                            rolePermission.permission.code
+                    )
             )
         ),
     ];
@@ -36,9 +34,7 @@ export function mapAuthenticatedUser(user: AuthUserWithRoles) {
         id: user.id,
         name: user.name,
         username: user.username,
-        roles: user.roles.map(
-            (userRole) => userRole.role.name
-        ),
+        roles,
         permissions,
     };
 }

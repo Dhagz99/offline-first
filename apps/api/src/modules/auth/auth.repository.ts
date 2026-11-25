@@ -31,6 +31,19 @@ const authUserSelect = {
             },
         },
     },
+
+    branches: {
+        select: {
+            branch: {
+                select: {
+                    id: true,
+                    branchCode: true,
+                    branchName: true,
+                    isActive: true,
+                },
+            },
+        },
+    },
 } as const;
 
 export async function findByIdWithRoles(userId: string) {
@@ -301,3 +314,8 @@ export async function updatePermissions(
         }
     });
 }
+
+
+export type AuthUserRecord = NonNullable<
+    Awaited<ReturnType<typeof findByIdWithRoles>>
+>;

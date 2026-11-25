@@ -8,6 +8,8 @@ import {
     type CreateBranchSchema,
     type UpdateBranchSchema,
 } from "@repo/shared";
+import { withChangeLogTransaction } from "@/modules/sync/change-log/change-log.service";
+import { publishBranchChange } from "@/modules/sync/change-log/branch-sync.service";
 
 /* =====================
    BRANCH SELECT
@@ -207,57 +209,105 @@ export async function getSummary() {
 export async function create(
     params: CreateBranchSchema
 ) {
-    return prisma.branch.create({
-        data: {
-            branchCode: params.branchCode,
 
-            branchName: params.branchName,
+    return withChangeLogTransaction(
+        async (tx) => {
 
-            address: params.address ?? null,
+            const branch =
+                await tx.branch.create({
+                    data: {
+                        branchCode:
+                            params.branchCode,
 
-            isActive: true,
-        },
+                        branchName:
+                            params.branchName,
 
-        select: branchSelect,
-    });
+                        address:
+                            params.address ?? null,
+
+                        isActive: true,
+                    },
+
+                    select: branchSelect,
+                });
+
+            await publishBranchChange(
+                tx,
+                branch.id,
+                "CREATE"
+            );
+
+            return branch;
+        }
+    );
 }
-
 /* =====================
    UPDATE BRANCH
 ===================== */
 
 export async function update(
     branchId: string,
+
     params: UpdateBranchSchema
 ) {
-    return prisma.branch.update({
-        where: {
-            id: branchId,
-        },
 
-        data: params,
+    return withChangeLogTransaction(
+        async (tx) => {
 
-        select: branchSelect,
-    });
+            const branch =
+                await tx.branch.update({
+                    where: {
+                        id: branchId,
+                    },
+
+                    data: params,
+
+                    select: branchSelect,
+                });
+
+            await publishBranchChange(
+                tx,
+                branch.id,
+                "UPDATE"
+            );
+
+            return branch;
+        }
+    );
 }
-
 /* =====================
    UPDATE BRANCH STATUS
 ===================== */
 
 export async function updateStatus(
     branchId: string,
+
     isActive: boolean
 ) {
-    return prisma.branch.update({
-        where: {
-            id: branchId,
-        },
 
-        data: {
-            isActive,
-        },
+    return withChangeLogTransaction(
+        async (tx) => {
 
-        select: branchSelect,
-    });
+            const branch =
+                await tx.branch.update({
+                    where: {
+                        id: branchId,
+                    },
+
+                    data: {
+                        isActive,
+                    },
+
+                    select: branchSelect,
+                });
+
+            await publishBranchChange(
+                tx,
+                branch.id,
+                "UPDATE"
+            );
+
+            return branch;
+        }
+    );
 }

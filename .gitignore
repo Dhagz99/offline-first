@@ -98,3 +98,14 @@ infrastructure/development/.env
 apps/api/.env.central
 apps/api/.env.branch-a
 apps/api/.env.branch-b
+
+
+# Frontend instance environments
+apps/web/.env.central
+apps/web/.env.branch-a
+apps/web/.env.branch-b
+
+# Independent Next.js build directories
+apps/web/.next-central/
+apps/web/.next-branch-a/
+apps/web/.next-branch-b/

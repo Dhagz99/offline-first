@@ -38,7 +38,10 @@
     "db:admin:central": "dotenv -e .env.central -o -- tsx prisma/scripts/create-admin.ts",
 
     "provision:branch-a": "dotenv -e .env.branch-a -o -- tsx prisma/scripts/provision-branch.ts",
-    "provision:branch-b": "dotenv -e .env.branch-b -o -- tsx prisma/scripts/provision-branch.ts"
+    "provision:branch-b": "dotenv -e .env.branch-b -o -- tsx prisma/scripts/provision-branch.ts",
+
+    "pull:branch-a": "dotenv -e .env.branch-a -o -- tsx prisma/scripts/pull-branch.ts",
+    "pull:branch-b": "dotenv -e .env.branch-b -o -- tsx prisma/scripts/pull-branch.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

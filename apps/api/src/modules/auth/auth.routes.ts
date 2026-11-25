@@ -1,19 +1,48 @@
 import { Router } from "express";
-import { authenticate } from "../../middleware/authenticate.middleware";
-import { me, logout, loginController, createUserController, getRoleController, getPermissionController, getUsersController, updateRolePermissionsController, updateUserController } from "./auth.controller";
-import { authRateLimiter } from "@/middleware/rate-limit.middleware";
+
+import {
+    authenticate,
+} from "@/middleware/authenticate.middleware";
+
+import {
+    authRateLimiter,
+} from "@/middleware/rate-limit.middleware";
+
+import {
+    me,
+    logout,
+    loginController,
+} from "./auth.controller";
 
 const router = Router();
 
-// router.post("/login", authRateLimiter, loginController); //enable when production
-router.post("/login", loginController);
-router.post("/signup", createUserController);
-router.get("/roles", getRoleController)
-router.get("/permissions", getPermissionController)
-router.get("/users", getUsersController)
-router.put("/roles/:id/permissions", updateRolePermissionsController)
-router.put("/users/:id", updateUserController)
-router.get("/me", authenticate, me);
-router.post("/logout", authenticate, logout);
+/* =========================
+   LOGIN
+========================= */
+
+router.post(
+    "/login",
+    authRateLimiter,
+    loginController
+);
+
+/* =========================
+   CURRENT USER
+========================= */
+
+router.get(
+    "/me",
+    authenticate,
+    me
+);
+
+/* =========================
+   LOGOUT
+========================= */
+
+router.post(
+    "/logout",
+    logout
+);
 
 export default router;

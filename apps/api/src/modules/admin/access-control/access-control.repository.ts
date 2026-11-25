@@ -2,6 +2,8 @@ import { prisma } from "@/lib/database/prisma";
 import { Prisma } from "../../../../generated/prisma/client";
 import { AppError } from "@/errors/app-error";
 import { ErrorCodes } from "@/errors/error-codes";
+import { withChangeLogTransaction } from "@/modules/sync/change-log/change-log.service";
+import { getUserBranchIds, publishRoleAccessChanges, publishUserAccessChanges, publishUserDeletion } from "@/modules/sync/change-log/user-access-sync.service";
 
 export const userSelect = {
     id: true,
@@ -316,71 +318,93 @@ export async function createUser(data: {
     roleIds: string[];
     branchIds: string[];
 }) {
-    return prisma.$transaction(async (tx) => {
-        const roleIds = await validateRoleIds(
-            tx,
-            data.roleIds
-        );
 
-        const branchIds = await validateBranchIds(
-            tx,
-            data.branchIds
-        );
+    return withChangeLogTransaction(
+        async (tx) => {
 
-        const user = await tx.user.create({
-            data: {
-                name: data.name,
-                username: data.username,
-                email: data.email ?? null,
-                password: data.password,
-                isActive: true,
-            },
+            const roleIds =
+                await validateRoleIds(
+                    tx,
+                    data.roleIds
+                );
 
-            select: {
-                id: true,
-            },
-        });
+            const branchIds =
+                await validateBranchIds(
+                    tx,
+                    data.branchIds
+                );
 
-        /* =====================
-           ASSIGN ROLES
-        ===================== */
+            const user =
+                await tx.user.create({
+                    data: {
+                        name: data.name,
+                        username: data.username,
+                        email: data.email ?? null,
+                        password: data.password,
+                        isActive: true,
+                    },
 
-        await tx.userRole.createMany({
-            data: roleIds.map((roleId) => ({
-                userId: user.id,
-                roleId,
-            })),
-        });
+                    select: {
+                        id: true,
+                    },
+                });
 
-        /* =====================
-           ASSIGN BRANCHES
-        ===================== */
+            /* =====================
+               ASSIGN ROLES
+            ===================== */
 
-        if (branchIds.length > 0) {
-            await tx.userBranch.createMany({
-                data: branchIds.map((branchId) => ({
-                    userId: user.id,
-                    branchId,
-                })),
+            await tx.userRole.createMany({
+                data: roleIds.map(
+                    (roleId) => ({
+                        userId: user.id,
+                        roleId,
+                    })
+                ),
+            });
+
+            /* =====================
+               ASSIGN BRANCHES
+            ===================== */
+
+            if (branchIds.length > 0) {
+
+                await tx.userBranch.createMany({
+                    data: branchIds.map(
+                        (branchId) => ({
+                            userId: user.id,
+                            branchId,
+                        })
+                    ),
+                });
+            }
+
+            /* =====================
+               SYNCHRONIZATION EVENT
+            ===================== */
+
+            await publishUserAccessChanges(
+                tx,
+                user.id,
+                []
+            );
+
+            /* =====================
+               RETURN SAFE RESPONSE
+            ===================== */
+
+            return tx.user.findUniqueOrThrow({
+                where: {
+                    id: user.id,
+                },
+
+                select: userSelect,
             });
         }
-
-        /* =====================
-           RETURN SAFE RESPONSE
-        ===================== */
-
-        return tx.user.findUniqueOrThrow({
-            where: {
-                id: user.id,
-            },
-
-            select: userSelect,
-        });
-    });
+    );
 }
-
 export async function updateUser(
     userId: string,
+
     data: {
         name?: string;
         username?: string;
@@ -391,216 +415,306 @@ export async function updateUser(
         branchIds?: string[];
     }
 ) {
-    return prisma.$transaction(async (tx) => {
-        const roleIds =
-            data.roleIds !== undefined
-                ? await validateRoleIds(tx, data.roleIds)
-                : undefined;
 
-        const branchIds =
-            data.branchIds !== undefined
-                ? await validateBranchIds(tx, data.branchIds)
-                : undefined;
+    return withChangeLogTransaction(
+        async (tx) => {
 
-        /* =====================
-           UPDATE USER
-        ===================== */
+            /* =====================
+               PREVIOUS BRANCHES
+            ===================== */
 
-        await tx.user.update({
-            where: {
-                id: userId,
-            },
+            const previousBranchIds =
+                await getUserBranchIds(
+                    tx,
+                    userId
+                );
 
-            data: {
-                ...(data.name !== undefined && {
-                    name: data.name,
-                }),
+            /* =====================
+               VALIDATE ASSIGNMENTS
+            ===================== */
 
-                ...(data.username !== undefined && {
-                    username: data.username,
-                }),
+            const roleIds =
+                data.roleIds !== undefined
+                    ? await validateRoleIds(
+                        tx,
+                        data.roleIds
+                    )
+                    : undefined;
 
-                ...(data.email !== undefined && {
-                    email: data.email,
-                }),
+            const branchIds =
+                data.branchIds !== undefined
+                    ? await validateBranchIds(
+                        tx,
+                        data.branchIds
+                    )
+                    : undefined;
 
-                ...(data.password !== undefined && {
-                    password: data.password,
-                }),
+            /* =====================
+               UPDATE USER
+            ===================== */
 
-                ...(data.isActive !== undefined && {
-                    isActive: data.isActive,
-                }),
-            },
-
-            select: {
-                id: true,
-            },
-        });
-
-        /* =====================
-           UPDATE ROLES
-        ===================== */
-
-        if (roleIds !== undefined) {
-            await tx.userRole.deleteMany({
+            await tx.user.update({
                 where: {
-                    userId,
+                    id: userId,
+                },
 
-                    roleId: {
-                        notIn: roleIds,
-                    },
+                data: {
+                    ...(data.name !== undefined && {
+                        name: data.name,
+                    }),
+
+                    ...(data.username !== undefined && {
+                        username: data.username,
+                    }),
+
+                    ...(data.email !== undefined && {
+                        email: data.email,
+                    }),
+
+                    ...(data.password !== undefined && {
+                        password: data.password,
+                    }),
+
+                    ...(data.isActive !== undefined && {
+                        isActive: data.isActive,
+                    }),
                 },
             });
 
-            await tx.userRole.createMany({
-                data: roleIds.map((roleId) => ({
-                    userId,
-                    roleId,
-                })),
+            /* =====================
+               UPDATE ROLES
+            ===================== */
 
-                skipDuplicates: true,
+            if (roleIds !== undefined) {
+
+                await tx.userRole.deleteMany({
+                    where: {
+                        userId,
+                    },
+                });
+
+                if (roleIds.length > 0) {
+
+                    await tx.userRole.createMany({
+                        data: roleIds.map(
+                            (roleId) => ({
+                                userId,
+                                roleId,
+                            })
+                        ),
+                    });
+                }
+            }
+
+            /* =====================
+               UPDATE BRANCHES
+            ===================== */
+
+            if (branchIds !== undefined) {
+
+                await tx.userBranch.deleteMany({
+                    where: {
+                        userId,
+                    },
+                });
+
+                if (branchIds.length > 0) {
+
+                    await tx.userBranch.createMany({
+                        data: branchIds.map(
+                            (branchId) => ({
+                                userId,
+                                branchId,
+                            })
+                        ),
+                    });
+                }
+            }
+
+            /* =====================
+               SYNCHRONIZATION EVENTS
+            ===================== */
+
+            await publishUserAccessChanges(
+                tx,
+                userId,
+                previousBranchIds
+            );
+
+            /* =====================
+               RETURN SAFE RESPONSE
+            ===================== */
+
+            return tx.user.findUniqueOrThrow({
+                where: {
+                    id: userId,
+                },
+
+                select: userSelect,
             });
         }
-
-        /* =====================
-           UPDATE BRANCHES
-        ===================== */
-
-        if (branchIds !== undefined) {
-            if (branchIds.length === 0) {
-                await tx.userBranch.deleteMany({
-                    where: {
-                        userId,
-                    },
-                });
-            } else {
-                await tx.userBranch.deleteMany({
-                    where: {
-                        userId,
-
-                        branchId: {
-                            notIn: branchIds,
-                        },
-                    },
-                });
-
-                await tx.userBranch.createMany({
-                    data: branchIds.map((branchId) => ({
-                        userId,
-                        branchId,
-                    })),
-
-                    skipDuplicates: true,
-                });
-            }
-        }
-
-        /* =====================
-           RETURN UPDATED USER
-        ===================== */
-
-        return tx.user.findUniqueOrThrow({
-            where: {
-                id: userId,
-            },
-
-            select: userSelect,
-        });
-    });
+    );
 }
 
-export const deleteUser = async (userId: string) => {
-    return prisma.user.delete({
-        where: {
-            id: userId,
-        },
-    });
-};
+export async function deleteUser(
+    userId: string
+) {
+
+    return withChangeLogTransaction(
+        async (tx) => {
+
+            const branchIds =
+                await getUserBranchIds(
+                    tx,
+                    userId
+                );
+
+            const deletedUser =
+                await tx.user.delete({
+                    where: {
+                        id: userId,
+                    },
+
+                    select: {
+                        id: true,
+                    },
+                });
+
+            await publishUserDeletion(
+                tx,
+                userId,
+                branchIds
+            );
+
+            return deletedUser;
+        }
+    );
+}
 
 export async function createRole(data: {
     name: string;
     description?: string | null;
 }) {
-    return prisma.role.create({
-        data,
-    });
+
+    return withChangeLogTransaction(
+        async (tx) => {
+
+            return tx.role.create({
+                data,
+            });
+        }
+    );
 }
 
 export async function updateRole(
     roleId: string,
+
     data: {
         name?: string;
         description?: string | null;
     }
 ) {
-    return prisma.role.update({
-        where: {
-            id: roleId,
-        },
-        data,
-    });
+
+    return withChangeLogTransaction(
+        async (tx) => {
+
+            const role =
+                await tx.role.update({
+                    where: {
+                        id: roleId,
+                    },
+
+                    data,
+                });
+
+            await publishRoleAccessChanges(
+                tx,
+                roleId
+            );
+
+            return role;
+        }
+    );
 }
 
 export async function updateRolePermissions(
     roleId: string,
+
     permissionIds: string[]
 ) {
-    return prisma.$transaction(async (tx) => {
-        const uniquePermissionIds = [
-            ...new Set(permissionIds),
-        ];
 
-        const permissions = await tx.permission.findMany({
-            where: {
-                id: {
-                    in: uniquePermissionIds,
+    return withChangeLogTransaction(
+        async (tx) => {
+
+            const uniquePermissionIds = [
+                ...new Set(permissionIds),
+            ];
+
+            const permissions =
+                await tx.permission.findMany({
+                    where: {
+                        id: {
+                            in: uniquePermissionIds,
+                        },
+                    },
+
+                    select: {
+                        id: true,
+                    },
+                });
+
+            if (
+                permissions.length !==
+                uniquePermissionIds.length
+            ) {
+                throw new AppError(
+                    "One or more permission IDs are invalid",
+                    400,
+                    ErrorCodes.INVALID_PERMISSION_IDS
+                );
+            }
+
+            await tx.rolePermission.deleteMany({
+                where: {
+                    roleId,
                 },
-            },
-            select: {
-                id: true,
-            },
-        });
+            });
 
-        if (
-            permissions.length !==
-            uniquePermissionIds.length
-        ) {
-            throw new AppError(
-                "One or more permission IDs are invalid",
-                400,
-                ErrorCodes.INVALID_PERMISSION_IDS
+            if (uniquePermissionIds.length > 0) {
+
+                await tx.rolePermission.createMany({
+                    data: uniquePermissionIds.map(
+                        (permissionId) => ({
+                            roleId,
+                            permissionId,
+                        })
+                    ),
+
+                    skipDuplicates: true,
+                });
+            }
+
+            /* =====================
+               SYNCHRONIZATION EVENTS
+            ===================== */
+
+            await publishRoleAccessChanges(
+                tx,
+                roleId
             );
-        }
 
-        await tx.rolePermission.deleteMany({
-            where: {
-                roleId,
-            },
-        });
+            return tx.rolePermission.findMany({
+                where: {
+                    roleId,
+                },
 
-        if (uniquePermissionIds.length > 0) {
-            await tx.rolePermission.createMany({
-                data: uniquePermissionIds.map(
-                    (permissionId) => ({
-                        roleId,
-                        permissionId,
-                    })
-                ),
-                skipDuplicates: true,
+                select: {
+                    roleId: true,
+                    permissionId: true,
+                },
             });
         }
-
-        return tx.rolePermission.findMany({
-            where: {
-                roleId,
-            },
-            select: {
-                roleId: true,
-                permissionId: true,
-            },
-        });
-    });
+    );
 }
 
 export async function findAllRoles() {

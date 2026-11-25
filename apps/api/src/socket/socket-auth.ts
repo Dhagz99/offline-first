@@ -2,6 +2,7 @@ import type { ExtendedError, Socket } from "socket.io";
 import jwt from "jsonwebtoken";
 import { parseCookie } from "cookie";
 import { env } from "@/config/env";
+import { authConfig } from "@/config/auth.config";
 
 export function authenticateSocket(
     socket: Socket,
@@ -15,7 +16,7 @@ export function authenticateSocket(
         }
 
         const cookies = parseCookie(cookieHeader);
-        const token = cookies.access_token;
+        const token = cookies[authConfig.accessTokenCookie]
 
         if (!token) {
             return next(new Error("Unauthorized"));

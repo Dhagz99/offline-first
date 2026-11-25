@@ -1,15 +1,14 @@
 import axios from "axios";
 
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_LAN_URL;
-
-if (!backendUrl) {
-    throw new Error(
-        "NEXT_PUBLIC_BACKEND_LAN_URL is not configured"
-    );
-}
+const backendUrl =
+    process.env.NEXT_PUBLIC_BACKEND_LAN_URL
+        ?.trim()
+        .replace(/\/+$/, "");
 
 const api = axios.create({
-    baseURL: `${backendUrl.replace(/\/+$/, "")}/api`,
+    baseURL: backendUrl
+        ? `${backendUrl}/api`
+        : "/api",
 
     withCredentials: true,
 

@@ -34,6 +34,6 @@ app.use("/api", routes);
 // Global Error Handler
 // Must be registered after routes
 // ---------------------------
-// app.use(errorHandler); //enable when production
+app.use(errorHandler); //enable when production
 
 export default app;

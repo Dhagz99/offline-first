@@ -3,6 +3,7 @@ import http from "http";
 import app from "./app";
 import { initializeSocket } from "./config/socket.config";
 import { logger } from "@/lib/logger/logger";
+import { branchSyncWorker } from "./modules/sync/worker/sync.worker";
 
 dotenv.config();
 
@@ -14,7 +15,6 @@ const server = http.createServer(app);
 // Socket.io
 // ---------------------------
 export const io = initializeSocket(server);
-
 // ---------------------------
 // Start Server (LAN Ready)
 // ---------------------------
@@ -22,4 +22,7 @@ logger.info("Server started");
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
+
+branchSyncWorker.start();
+
 });

@@ -63,6 +63,20 @@ const envSchema = z.object({
         .min(1024)
         .max(52428800)
         .default(10485760),
+
+    SYNC_MAX_RETRY_DELAY_MS: z.coerce
+        .number()
+        .int()
+        .min(1000)
+        .max(3600000)
+        .default(300000),
+
+    SYNC_MAX_BATCHES_PER_CYCLE: z.coerce
+        .number()
+        .int()
+        .min(1)
+        .max(100)
+        .default(10),
 });
 
 export const env = envSchema.parse(process.env);

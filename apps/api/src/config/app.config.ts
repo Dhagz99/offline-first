@@ -27,5 +27,8 @@ export const appConfig = {
         requestTimeoutMs: env.SYNC_REQUEST_TIMEOUT_MS,
 
         maxResponseBytes:  env.SYNC_MAX_RESPONSE_BYTES,
+        
+        maxRetryDelayMs: env.SYNC_MAX_RETRY_DELAY_MS,
+        maxBatchesPerCycle: env.SYNC_MAX_BATCHES_PER_CYCLE,
     },
 };

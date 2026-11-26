@@ -23,6 +23,12 @@ export const navigation: NavigationItem[] = [
         icon: ClipboardList,
         roles: ["ADMIN"],
     },
+      {
+        title: "Sync Monitoring",
+        href: ROUTES.ADMIN.SYNC_VIEW,
+        icon: ClipboardList,
+        roles: ["ADMIN"],
+    },
      {
         title: "Branch",
         href: ROUTES.ADMIN.BRANCH,

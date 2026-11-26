@@ -3,3 +3,5 @@ export * from "./admin/index";
 export * from "./provisioning/provisioning.schema";
 export * from "./sync/sync-pull.schema";
 export * from "./sync/sync-payload.schema";
+export * from "./sync/sync-heartbeat.schema";
+export * from "./sync/sync-monitoring.schema";

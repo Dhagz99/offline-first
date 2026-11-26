@@ -13,6 +13,7 @@ import {
 } from "./sync.controller";
 import { getProvisioningSnapshotController } from "./provisioning/provisioning.controller";
 import { pullChangesController } from "./pull/pull.controller";
+import { saveHeartbeatController } from "./hearbeat/heartbeat.controller";
 
 const router = Router();
 
@@ -46,6 +47,15 @@ router.get(
     "/pull",
 
     pullChangesController
+);
+
+/* =====================
+   BRANCH HEARTBEAT
+===================== */
+
+router.post(
+  "/heartbeat",
+  saveHeartbeatController
 );
 
 export default router;

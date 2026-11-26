@@ -7,6 +7,7 @@ export const ROUTES = {
         DASHBOARD: "/admin/dashboard",
         ACCESS_CONTROL: "/admin/access-control",
         BRANCH: "/admin/branch",
+        SYNC_VIEW: "/admin/sync-monitoring",
     },
 
     USER:{

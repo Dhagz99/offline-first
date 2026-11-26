@@ -38,7 +38,7 @@ export async function synchronizeBranchService(
     const startedAt = Date.now();
 
     const {
-        maxBatches = 100,
+         maxBatches = appConfig.sync.maxBatchesPerCycle,
     } = options;
 
     if (
@@ -93,7 +93,7 @@ export async function synchronizeBranchService(
 
     while (
         hasMore &&
-        totalBatches < appConfig.sync.maxBatchesPerCycle
+        totalBatches < maxBatches
     ) {
 
         /* =========================

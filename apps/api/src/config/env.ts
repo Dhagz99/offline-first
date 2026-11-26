@@ -40,7 +40,7 @@ const envSchema = z.object({
 
     DATABASE_URL: z.string(),
 
-    JWT_SECRET: z.string().min(1),
+    JWT_SECRET: z.string().min(32),
     JWT_EXPIRES_IN: z.string().default("1d"),
 
     FRONTEND_URL: z.string().url(),
@@ -79,4 +79,50 @@ const envSchema = z.object({
         .default(10),
 });
 
-export const env = envSchema.parse(process.env);
+export const env = envSchema
+    .superRefine((data, ctx) => {
+
+        if (data.APP_MODE !== "BRANCH") {
+            return;
+        }
+
+        if (!data.BRANCH_ID) {
+            ctx.addIssue({
+                code: "custom",
+                path: ["BRANCH_ID"],
+                message:
+                    "BRANCH_ID is required in BRANCH mode",
+            });
+        }
+
+        if (!data.BRANCH_CODE) {
+            ctx.addIssue({
+                code: "custom",
+                path: ["BRANCH_CODE"],
+                message:
+                    "BRANCH_CODE is required in BRANCH mode",
+            });
+        }
+
+        if (data.SYNC_ENABLED) {
+
+            if (!data.CENTRAL_API_URL) {
+                ctx.addIssue({
+                    code: "custom",
+                    path: ["CENTRAL_API_URL"],
+                    message:
+                        "CENTRAL_API_URL is required when synchronization is enabled",
+                });
+            }
+
+            if (!data.BRANCH_API_KEY) {
+                ctx.addIssue({
+                    code: "custom",
+                    path: ["BRANCH_API_KEY"],
+                    message:
+                        "BRANCH_API_KEY is required when synchronization is enabled",
+                });
+            }
+        }
+    })
+    .parse(process.env);

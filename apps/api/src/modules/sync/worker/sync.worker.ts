@@ -185,17 +185,27 @@ class BranchSyncWorker {
                 );
             }
 
-            console.info(
+        console.info(
                 "[SYNC WORKER] Synchronization completed",
                 {
-                    branch: appConfig.branch.code,
-                    durationMs: Date.now() - startedAt,
+                    branch: result.branchCode,
+                    initialVersion: result.initialVersion,
+                    finalVersion: result.finalVersion,
+                    centralVersion: result.latestVersion,
+                    totalBatches: result.totalBatches,
+                    receivedEvents: result.receivedEvents,
+                    appliedEvents: result.appliedEvents,
+                    skippedEvents: result.skippedEvents,
+                    hasMore: result.hasMore,
+                    durationMs: result.durationMs,
                 }
             );
 
-            // The existing service handles event application,
-            // transactions, inbox records and cursor updates.
-            void result;
+            if (result.hasMore) {
+                nextDelay = 1000;
+            }
+
+            
 
         } catch {
             this.state.failedCycles += 1;
